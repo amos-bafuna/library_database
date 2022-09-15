@@ -80,3 +80,39 @@ alter table
   book_loans
 add
   constraint fk_barrower_cardno foreign key(borrower_cardNo) references borrower(cardNo) on delete cascade;
+
+load data local infile 'borrowers.csv' into table borrower fields terminated by ',' enclosed by '"' lines terminated by '\n' ignore 1 rows (cardNo, first_name, last_name);
+
+load data local infile 'authors.csv' into table author fields terminated by ',' enclosed by '"' lines terminated by '\n' ignore 1 rows (@dummy, @first_name, @last_name)
+set
+  first_name = @first_name,
+  last_name = @last_name;
+
+load data local infile 'publishers.csv' into table publisher fields terminated by ',' enclosed by '"' lines terminated by '\n' ignore 1 rows (@dummy, first_name);
+
+load data local infile 'books.csv' into table book fields terminated by ',' enclosed by '"' lines terminated by '\n' ignore 1 rows (
+  @titre,
+  @author,
+  @editor,
+  @author_last_name,
+  @author_first_name
+)
+set
+  title = @titre,
+  publisher_id =(
+    select
+      id
+    from
+      publisher
+    where
+      first_name like concat('%', @editor, '%')
+  ),
+  author_id =(
+    select
+      id
+    from
+      author
+    where
+      first_name like concat('%', @author_last_name, '%')
+      and last_name like concat('%', @author_last_name, '%')
+  );
